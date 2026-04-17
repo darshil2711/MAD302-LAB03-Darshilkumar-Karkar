@@ -9,7 +9,7 @@
  *              result in a TextView, and handles errors gracefully.
  */
 
-package com.example.lab3
+package com.example.lab03
 
 import android.Manifest
 import android.os.Bundle
@@ -20,6 +20,9 @@ import com.example.lab03.R
 import android.content.pm.PackageManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
 
 /**
  * Main activity for the Lab 3 Android application.
@@ -82,7 +85,48 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+
+    /**
+     * Simulates an async API call using Kotlin coroutines.
+     * Uses lifecycleScope to tie the coroutine to the Activity lifecycle.
+     * Shows a loading message, waits 2 seconds, then displays the result.
+     */
     private fun fetchData() {
-        tvResult.text = "Fetching..."
+        // Launch coroutine on the lifecycle-aware scope
+        lifecycleScope.launch {
+            // Show loading state immediately
+            tvResult.text = "Loading..."
+
+            try {
+                delay(2000)
+                val result = simulateApiCall()
+                tvResult.text = "Success: $result"
+
+            } catch (e: SecurityException) {
+                // Handles unexpected permission revocation mid-session
+                tvResult.text = "Permission error: ${e.message}"
+
+            } catch (e: Exception) {
+                // Handles simulated network failure or any other error
+                tvResult.text = "Network error: ${e.message}"
+            }
+        }
+    }
+    /**
+     * Simulates an API call that may randomly fail to mimic network errors.
+     * Throws an exception 40% of the time to test error handling.
+     *
+     * @throws Exception when simulated network failure occurs
+     * @return Mock API response string on success
+     */
+    private suspend fun simulateApiCall(): String {
+        delay(2000) // Simulate network latency
+
+        // Simulate a network failure ~40% of the time
+        if (Math.random() < 0.4) {
+            throw Exception("Network timeout: server did not respond")
+        }
+
+        return "User: Jane Doe | Score: 98 | Status: Active"
     }
 }
